@@ -1,6 +1,6 @@
 --[[
 
-=====================================================================
+====================================================================
 ==================== READ THIS BEFORE CONTINUING ====================
 =====================================================================
 ========                                    .-----.          ========
@@ -91,7 +91,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
@@ -109,11 +109,6 @@ vim.opt.mouse = 'a'
 
 -- Don't show the mode, since it's already in status line
 vim.opt.showmode = false
-
--- Sync clipboard between OS and Neovim.
---  Remove this option if you want your OS clipboard to remain independent.
---  See `:help 'clipboard'`
-vim.opt.clipboard = 'unnamedplus'
 
 -- Enable break indent
 vim.opt.breakindent = true
@@ -185,10 +180,10 @@ vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' }
 --  Use CTRL+<hjkl> to switch between windows
 --
 --  See `:help wincmd` for a list of all window commands
-vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
-vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+-- vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
+-- vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
+-- vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
+-- vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -286,6 +281,7 @@ require('lazy').setup({
         ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
         ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
         ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
+        ['<leader>t'] = { name = '[T]oggle', _ = 'which_key_ignore' },
       }
     end,
   },
@@ -368,14 +364,20 @@ require('lazy').setup({
       local builtin = require 'telescope.builtin'
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-      vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
-      vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
+      vim.keymap.set('n', '<leader>sk', builtin.command_history, { desc = '[S]earch [C]ommands' })
+      vim.keymap.set('n', '<leader>sf', builtin.git_files, { desc = '[S]earch [F]iles' })
+      vim.keymap.set('n', '<leader>sa', builtin.find_files, { desc = '[S]earch [All] files' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
+      vim.keymap.set('n', '<leader>sG', builtin.current_buffer_fuzzy_find, { desc = '[S]earch by [G]rep in current file' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
-      vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
-      vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
+      vim.keymap.set('n', '<leader>s.', builtin.resume, { desc = '[S]earch [R]esume' })
+      vim.keymap.set('n', '<leader>sr', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+      vim.keymap.set({"n", "v"}, "<leader>gB", builtin.git_branches, {desc = "Git branches"})
+      vim.keymap.set({"n", "v"}, "<leader>gC", builtin.git_commits, {desc = "Git commits"})
+      vim.keymap.set({"n", "v"}, "<leader>gc", builtin.git_bcommits, {desc = "Git commits for current buffer"})
+
 
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
@@ -539,9 +541,9 @@ require('lazy').setup({
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        -- clangd = {},
+        clangd = {},
         -- gopls = {},
-        -- pyright = {},
+        pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -549,7 +551,7 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`tsserver`) will work just fine
-        -- tsserver = {},
+        tsserver = {},
         --
 
         lua_ls = {
@@ -599,26 +601,6 @@ require('lazy').setup({
     end,
   },
 
-  { -- Autoformat
-    'stevearc/conform.nvim',
-    opts = {
-      notify_on_error = false,
-      format_on_save = {
-        timeout_ms = 500,
-        lsp_fallback = true,
-      },
-      formatters_by_ft = {
-        lua = { 'stylua' },
-        -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
-        --
-        -- You can use a sub-list to tell conform to run *until* a formatter
-        -- is found.
-        -- javascript = { { "prettierd", "prettier" } },
-      },
-    },
-  },
-
   { -- Autocompletion
     'hrsh7th/nvim-cmp',
     event = 'InsertEnter',
@@ -637,14 +619,14 @@ require('lazy').setup({
         end)(),
         dependencies = {
           -- `friendly-snippets` contains a variety of premade snippets.
-          --    See the README about individual language/framework/plugin snippets:
-          --    https://github.com/rafamadriz/friendly-snippets
-          -- {
-          --   'rafamadriz/friendly-snippets',
-          --   config = function()
-          --     require('luasnip.loaders.from_vscode').lazy_load()
-          --   end,
-          -- },
+          -- See the README about individual language/framework/plugin snippets:
+          -- https://github.com/rafamadriz/friendly-snippets
+          {
+            'rafamadriz/friendly-snippets',
+            config = function()
+              require('luasnip.loaders.from_vscode').lazy_load()
+            end,
+          },
         },
       },
       'saadparwaiz1/cmp_luasnip',
@@ -729,13 +711,13 @@ require('lazy').setup({
     -- change the command in the config to whatever the name of that colorscheme is
     --
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`
-    'folke/tokyonight.nvim',
+    'catppuccin/nvim',
     priority = 1000, -- make sure to load this before all the other start plugins
     init = function()
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+      vim.cmd.colorscheme 'catppuccin'
 
       -- You can configure highlights by doing something like
       vim.cmd.hi 'Comment gui=none'
@@ -787,7 +769,7 @@ require('lazy').setup({
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
     opts = {
-      ensure_installed = { 'bash', 'c', 'html', 'lua', 'markdown', 'vim', 'vimdoc' },
+      ensure_installed = { 'bash', 'c', 'html', 'lua', 'markdown', 'vim', 'vimdoc', "cpp"},
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -824,14 +806,14 @@ require('lazy').setup({
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
   -- require 'kickstart.plugins.debug',
-  -- require 'kickstart.plugins.indent_line',
+  require 'kickstart.plugins.indent_line',
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
   --    For additional information, see `:help lazy.nvim-lazy.nvim-structuring-your-plugins`
-  -- { import = 'custom.plugins' },
+  { import = 'custom.plugins' },
 }, {
   ui = {
     -- If you have a Nerd Font, set icons to an empty table which will use the
@@ -856,3 +838,72 @@ require('lazy').setup({
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
+--
+--
+-- Key cursor in the middle
+vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv", {desc= "Move select up"})
+vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv", {desc= "Move select down"})
+
+vim.keymap.set("n", "J", "mzJ`z")
+vim.keymap.set("n", "<C-d>", "<C-d>zz", {desc= "Jump half page down"})
+vim.keymap.set("n", "<C-u>", "<C-u>zz", {desc= "Jump half page up"})
+vim.keymap.set("n", "n", "nzzzv")
+vim.keymap.set("n", "N", "Nzzzv")
+
+vim.keymap.set("x", "<leader>p", [["_dP]], {desc= "Paste without yank"})
+
+vim.keymap.set({ "v" }, "<", "<gv", {desc= "Indent without loosing selection"})
+vim.keymap.set({ "v" }, ">", ">gv", {desc= "Indent without loosing selection"})
+
+vim.keymap.set({ "n", "v" }, "<leader>y", [["+y]])
+vim.keymap.set("n", "<leader>Y", [["+Y]])
+
+vim.keymap.set("n", "<C-f>", "<cmd>silent !tmux neww tmux-sessionizer<CR>", {desc= "Tmux sessionizer new"})
+
+
+vim.keymap.set({ "n", "v" }, "<C-e>", ":ClangdSwitchSourceHeader <cr>", {desc= "Clangd switch source<->header"})
+
+
+vim.keymap.set({ "n", "v" }, "<leader>gp", ":Gitsigns preview_hunk_inline<cr>", {desc= "View commits"})
+vim.keymap.set({ "n", "v" }, "<leader>gg", ":Git<cr>", {desc= "Git status 2"})
+local toggle_diffview = function()
+    local lib = require("diffview.lib")
+    local view = lib.get_current_view()
+    if view then
+        vim.cmd.DiffviewClose()
+    else
+        vim.cmd.DiffviewOpen()
+    end
+end
+vim.keymap.set({ "n", "v" }, "<leader>gd", function() toggle_diffview() end, {desc= "Git diff"})
+vim.keymap.set({ "n" }, "<leader>gl", function()
+    local url = require "gitlinker".get_buf_range_url("n")
+    vim.fn.setreg("+", url)
+    print("URL copied to clipboard")
+end, {desc="Copy Line URL"})
+
+-- buffers
+vim.keymap.set({ "n", "v", }, "<leader>bC", ":%bd|e# <cr>", {desc= "Close all buffers"})
+
+-- map("n", "<leader>1", ":BufferLineGoToBuffer 1<CR>", "Buffer 1")
+-- map("n", "<leader>2", ":BufferLineGoToBuffer 2<CR>", "Buffer 2")
+-- map("n", "<leader>3", ":BufferLineGoToBuffer 3<CR>", "Buffer 3")
+-- map("n", "<leader>4", ":BufferLineGoToBuffer 4<CR>", "Buffer 4")
+-- map("n", "<leader>5", ":BufferLineGoToBuffer 5<CR>", "Buffer 5")
+-- map("n", "<leader>6", ":BufferLineGoToBuffer 6<CR>", "Buffer 6")
+-- map("n", "<leader>7", ":BufferLineGoToBuffer 7<CR>", "Buffer 7")
+-- map("n", "<leader>8", ":BufferLineGoToBuffer 8<CR>", "Buffer 8")
+-- map("n", "<leader>9", ":BufferLineGoToBuffer 9<CR>", "Buffer 9")
+-- map("n", "<leader>0", ":BufferLineGoToBuffer 10<CR>", "Buffer 10")
+ 
+local function gitsigns_visual_op(op)
+    return function()
+        return require('gitsigns')[op]({ vim.fn.line("."), vim.fn.line("v") })
+    end
+end
+vim.keymap.set("n", "<leader>gs", ":Gitsigns stage_hunk<cr>", {desc= "GitSigns: stage hunk"})
+vim.keymap.set("n", "<leader>gr", ":Gitsigns reset_hunk<cr>", {desc= "GitSigns: reset hunk"})
+vim.keymap.set("n", "<leader>gu", ":Gitsigns undo_stage_hunk<cr>", {desc= "GitSigns: undo hunk"})
+vim.keymap.set("v", "<leader>gs", gitsigns_visual_op "stage_hunk", {desc= "GitSigns: stage selected hunk"})
+vim.keymap.set("v", "<leader>gu", gitsigns_visual_op "undo_hunk", {desc= "GitSigns: undo selected hunk"})
+vim.keymap.set("v", "<leader>gr", gitsigns_visual_op "reset_hunk", {desc= "GitSigns: reset selected hunk"})
